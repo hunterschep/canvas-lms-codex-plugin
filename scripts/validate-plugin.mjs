@@ -68,6 +68,8 @@ function validateStructure() {
   const marketplacePath = resolve(repoRoot, ".agents/plugins/marketplace.json");
   assert(existsSync(marketplacePath), "Missing repo marketplace file at .agents/plugins/marketplace.json");
   const marketplace = JSON.parse(readFileSync(marketplacePath, "utf8"));
+  assert(marketplace?.name === "canvas-local-plugins", 'Repo marketplace name must be "canvas-local-plugins"');
+  assert(marketplace?.interface?.displayName === "Canvas Local Plugins", 'Repo marketplace display name must be "Canvas Local Plugins"');
   const entry = Array.isArray(marketplace.plugins)
     ? marketplace.plugins.find((plugin) => plugin?.name === "canvas-lms")
     : null;
@@ -83,6 +85,7 @@ function validateStructure() {
   const installer = readFileSync(resolve(pluginRoot, "install.sh"), "utf8");
   assert(!installer.includes("Updated Codex MCP config"), "install.sh should not register Canvas as a global mcp_servers entry");
   assert(!installer.includes("[mcp_servers.canvas]"), "install.sh should not write a global [mcp_servers.canvas] block");
+  assert(installer.includes('MARKETPLACE_NAME="canvas-local-plugins"'), 'install.sh must keep the repo marketplace name stable as "canvas-local-plugins"');
 
   return manifest;
 }

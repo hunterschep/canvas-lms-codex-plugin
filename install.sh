@@ -56,8 +56,8 @@ if [[ "${MODE}" == "workspace" ]]; then
   TARGET_DIR="${REPO_ROOT}/plugins/${PLUGIN_NAME}"
   MARKETPLACE_PATH="${REPO_ROOT}/.agents/plugins/marketplace.json"
   MARKETPLACE_SOURCE_PATH="./plugins/${PLUGIN_NAME}"
-  MARKETPLACE_NAME="local-repo-plugins"
-  MARKETPLACE_DISPLAY_NAME="Local Repo Plugins"
+  MARKETPLACE_NAME="canvas-local-plugins"
+  MARKETPLACE_DISPLAY_NAME="Canvas Local Plugins"
 else
   TARGET_DIR="${DEFAULT_PERSONAL_TARGET}"
   MARKETPLACE_PATH="${DEFAULT_PERSONAL_MARKETPLACE}"
@@ -89,6 +89,10 @@ mkdir -p "$(dirname "${MARKETPLACE_PATH}")"
 
 if [[ "${USE_EXISTING_TARGET}" != "1" ]]; then
   git clone --depth 1 "${REPO_URL}" "${TARGET_DIR}"
+fi
+
+if [[ -d "${HOME}/.codex/plugins/cache" ]]; then
+  find "${HOME}/.codex/plugins/cache" -mindepth 2 -maxdepth 2 -type d -name "${PLUGIN_NAME}" -exec rm -rf {} +
 fi
 
 python3 - "${TARGET_DIR}" <<'PY'
@@ -183,19 +187,12 @@ if not config_path.exists():
     raise SystemExit(0)
 
 text = config_path.read_text(encoding="utf-8")
-preserved_plugin_sections = plugin_section_pattern.findall(text)
-stripped_text = plugin_section_pattern.sub("", text)
-updated = marker_pattern.sub("", stripped_text).rstrip()
+updated = marker_pattern.sub("", plugin_section_pattern.sub("", text)).rstrip()
 
 if updated == text.rstrip():
     raise SystemExit(0)
 
-if preserved_plugin_sections:
-    updated = updated.rstrip() + "\n\n" + "\n".join(section.rstrip() for section in preserved_plugin_sections) + "\n"
-else:
-    updated = updated + ("\n" if updated else "")
-
-config_path.write_text(updated, encoding="utf-8")
+config_path.write_text(updated + ("\n" if updated else ""), encoding="utf-8")
 PY
 
 cat <<EOF
