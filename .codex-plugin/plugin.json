@@ -1,0 +1,42 @@
+{
+  "name": "canvas-lms",
+  "version": "0.2.2",
+  "description": "Community-built student-focused Canvas LMS workflows and API access for Codex.",
+  "author": {
+    "name": "Hunter Schep",
+    "url": "https://github.com/hunterschep"
+  },
+  "homepage": "https://github.com/hunterschep/canvas-lms-codex-plugin",
+  "repository": "https://github.com/hunterschep/canvas-lms-codex-plugin",
+  "license": "MIT",
+  "keywords": [
+    "canvas",
+    "canvas-lms",
+    "codex",
+    "codex-plugin",
+    "lms",
+    "mcp",
+    "education",
+    "student"
+  ],
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json",
+  "interface": {
+    "displayName": "Canvas LMS",
+    "shortDescription": "Community-built student-first Canvas tools for Codex.",
+    "longDescription": "Community-built Canvas LMS plugin for Codex focused on the student experience: courses, grades, planner items, pages, assignments, quizzes, announcements, modules, and submissions. This is not an official Instructure product.",
+    "developerName": "Hunter Schep",
+    "category": "Productivity",
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "websiteURL": "https://github.com/hunterschep/canvas-lms-codex-plugin",
+    "defaultPrompt": [
+      "Show my current Canvas courses and grades.",
+      "Summarize this Canvas course's front page, modules, and assignments.",
+      "Show my upcoming Canvas work, quizzes, and announcements."
+    ],
+    "brandColor": "#C0392B"
+  }
+}

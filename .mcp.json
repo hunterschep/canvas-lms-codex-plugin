@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "canvas": {
+      "command": "node",
+      "args": [
+        "./scripts/canvas-mcp-server.mjs"
+      ],
+      "cwd": ".",
+      "env_vars": [
+        "CANVAS_BASE_URL",
+        "CANVAS_ACCESS_TOKEN",
+        "CANVAS_API_TOKEN",
+        "CANVAS_TIMEOUT_MS",
+        "CANVAS_USER_AGENT",
+        "CANVAS_ACCEPT_STRING_IDS"
+      ],
+      "startup_timeout_sec": 15,
+      "tool_timeout_sec": 120
+    }
+  }
+}
