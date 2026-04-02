@@ -59,7 +59,7 @@ function validateStructure() {
   assert(canvasServer, 'Missing ".mcp.json" mcpServers.canvas definition');
   assert(canvasServer.command === "node", 'mcpServers.canvas.command must be "node"');
   assert(Array.isArray(canvasServer.args) && canvasServer.args[0] === "./scripts/canvas-mcp-server.mjs", "mcp server args must point to the stdio entrypoint");
-  assert(canvasServer.cwd === ".", 'mcpServers.canvas.cwd must be "." so the installed plugin root is used as the working directory');
+  assert(!Object.prototype.hasOwnProperty.call(canvasServer, "cwd"), 'mcpServers.canvas should not set "cwd"; bundled MCP paths should stay plugin-root-relative');
 
   const marketplacePath = resolve(repoRoot, ".agents/plugins/marketplace.json");
   assert(existsSync(marketplacePath), "Missing repo marketplace file at .agents/plugins/marketplace.json");
@@ -75,6 +75,10 @@ function validateStructure() {
   const readme = readFileSync(resolve(pluginRoot, "README.md"), "utf8");
   assert(readme.includes("community-built"), 'README must mention that the plugin is community-built');
   assert(readme.includes("not an official Instructure product"), 'README must state that the plugin is not an official Instructure product');
+
+  const installer = readFileSync(resolve(pluginRoot, "install.sh"), "utf8");
+  assert(!installer.includes("Updated Codex MCP config"), "install.sh should not register Canvas as a global mcp_servers entry");
+  assert(!installer.includes("[mcp_servers.canvas]"), "install.sh should not write a global [mcp_servers.canvas] block");
 
   return manifest;
 }

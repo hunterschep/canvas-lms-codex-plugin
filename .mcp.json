@@ -5,7 +5,6 @@
       "args": [
         "./scripts/canvas-mcp-server.mjs"
       ],
-      "cwd": ".",
       "env_vars": [
         "CANVAS_BASE_URL",
         "CANVAS_ACCESS_TOKEN",

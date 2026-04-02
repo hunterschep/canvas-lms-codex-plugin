@@ -40,7 +40,7 @@ Installs the plugin for your user account and makes it available across projects
 curl -fsSL https://raw.githubusercontent.com/hunterschep/canvas-lms-codex-plugin/main/install.sh | bash
 ```
 
-This installs to `~/.codex/plugins/canvas-lms`, updates `~/.agents/plugins/marketplace.json`, and writes a managed `canvas` MCP entry to `~/.codex/config.toml`.
+This copies the plugin to `~/.codex/plugins/canvas-lms` and updates `~/.agents/plugins/marketplace.json`.
 
 ### Repo install
 
@@ -59,25 +59,13 @@ cd /absolute/path/to/your/repo/plugins/canvas-lms
 ./install.sh --repo-root /absolute/path/to/your/repo --force
 ```
 
-This installs to `/absolute/path/to/your/repo/plugins/canvas-lms`, updates `/absolute/path/to/your/repo/.agents/plugins/marketplace.json`, and writes the managed `canvas` MCP entry to `~/.codex/config.toml`.
+This copies the plugin to `/absolute/path/to/your/repo/plugins/canvas-lms` and updates `/absolute/path/to/your/repo/.agents/plugins/marketplace.json`.
 
 If you want repo-only behavior, do not also run the personal install.
 
-### What the installer writes
+The installer only copies the plugin and updates the selected marketplace file. It does not register `canvas` as a global `[mcp_servers.canvas]` entry.
 
-The installer registers the Canvas server in `~/.codex/config.toml`:
-
-```toml
-# BEGIN canvas-lms managed MCP server
-[mcp_servers.canvas]
-command = "node"
-args = ["/absolute/path/to/your/installed/plugin/scripts/canvas-mcp-server.mjs"]
-startup_timeout_sec = 15
-tool_timeout_sec = 120
-# END canvas-lms managed MCP server
-```
-
-This avoids local-plugin startup issues where Codex fails to resolve the bundled MCP server path from the correct working directory during install or first use.
+If you are upgrading from an older version of this plugin, rerun the installer once. It removes the legacy `canvas-lms managed MCP server` block from `~/.codex/config.toml`.
 
 If you are switching from personal install to repo-only install, remove the old personal copy:
 
@@ -86,6 +74,16 @@ rm -rf ~/.codex/plugins/canvas-lms
 ```
 
 Then remove the `canvas-lms` entry from `~/.agents/plugins/marketplace.json`, or delete that marketplace file if it only contained this plugin.
+
+## Install Scope
+
+Repo marketplace scope and installed-plugin scope are different in Codex:
+
+- A repo marketplace controls where the plugin appears for discovery and install.
+- After you install it in `/plugins`, Codex caches the installed bundle under `~/.codex/plugins/cache/...`.
+- Plugin enablement is stored in `~/.codex/config.toml`.
+
+That means a plugin installed from a repo marketplace can still be enabled in other projects until you disable or uninstall it from `/plugins`.
 
 ## Canvas Setup
 
@@ -179,11 +177,11 @@ If Codex shows an MCP startup timeout for `canvas` during install or first use:
 - restart Codex
 - reinstall the plugin with the install mode you actually want
 - start a new thread after reinstalling
-- confirm the managed `[mcp_servers.canvas]` block exists in `~/.codex/config.toml`
-- confirm that block points at the install you expect
+- confirm your shell exported `CANVAS_BASE_URL` and `CANVAS_ACCESS_TOKEN` before launching Codex
 - remove any stale home-local `canvas-lms` marketplace entry if `/plugins` still shows duplicates
+- if the plugin is installed but you do not want it active in other projects, disable or uninstall it from `/plugins`
 
-This plugin ships a bundled `.mcp.json`, and the installer also registers the same server in `~/.codex/config.toml` with an absolute path to the installed plugin copy for reliable startup.
+This plugin relies on the standard bundled `.mcp.json` flow described in the Codex plugin docs. It does not install a global `canvas` MCP server in `~/.codex/config.toml`.
 
 ## Security Notes
 

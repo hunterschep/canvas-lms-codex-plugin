@@ -86,7 +86,6 @@ fi
 
 mkdir -p "$(dirname "${TARGET_DIR}")"
 mkdir -p "$(dirname "${MARKETPLACE_PATH}")"
-mkdir -p "$(dirname "${CODEX_CONFIG_PATH}")"
 
 if [[ "${USE_EXISTING_TARGET}" != "1" ]]; then
   git clone --depth 1 "${REPO_URL}" "${TARGET_DIR}"
@@ -148,51 +147,33 @@ with open(marketplace_path, "w", encoding="utf-8") as f:
     f.write("\n")
 PY
 
-python3 - "${CODEX_CONFIG_PATH}" "${TARGET_DIR}" <<'PY'
-import json
+python3 - "${CODEX_CONFIG_PATH}" <<'PY'
 import pathlib
 import re
 import sys
 
 config_path = pathlib.Path(sys.argv[1]).expanduser()
-target_dir = pathlib.Path(sys.argv[2]).expanduser().resolve()
-server_path = (target_dir / "scripts" / "canvas-mcp-server.mjs").resolve()
 
 start_marker = "# BEGIN canvas-lms managed MCP server"
 end_marker = "# END canvas-lms managed MCP server"
+plugin_section_pattern = re.compile(r'(?ms)^\[plugins\."canvas-lms@[^"]+"\]\n(?:.+\n)*?(?=^\[|\Z)')
+marker_pattern = re.compile(rf"(?ms)^[ \t]*{re.escape(start_marker)}\n.*?^[ \t]*{re.escape(end_marker)}\n?")
 
-managed_block = "\n".join([
-    start_marker,
-    "[mcp_servers.canvas]",
-    'command = "node"',
-    f"args = [{json.dumps(str(server_path))}]",
-    "startup_timeout_sec = 15",
-    "tool_timeout_sec = 120",
-    end_marker,
-    "",
-])
+if not config_path.exists():
+    raise SystemExit(0)
 
-if config_path.exists():
-    text = config_path.read_text(encoding="utf-8")
+text = config_path.read_text(encoding="utf-8")
+preserved_plugin_sections = plugin_section_pattern.findall(text)
+stripped_text = plugin_section_pattern.sub("", text)
+updated = marker_pattern.sub("", stripped_text).rstrip()
+
+if updated == text.rstrip():
+    raise SystemExit(0)
+
+if preserved_plugin_sections:
+    updated = updated.rstrip() + "\n\n" + "\n".join(section.rstrip() for section in preserved_plugin_sections) + "\n"
 else:
-    text = ""
-
-marker_pattern = re.compile(
-    rf"\n?{re.escape(start_marker)}\n.*?{re.escape(end_marker)}\n?",
-    re.DOTALL,
-)
-
-section_pattern = re.compile(
-    r"(?ms)^\[mcp_servers\.canvas\]\n(?:.+\n)*?(?=^\[|\Z)"
-)
-
-if start_marker in text and end_marker in text:
-    updated = marker_pattern.sub(managed_block, text).rstrip() + "\n"
-elif section_pattern.search(text):
-    updated = section_pattern.sub(managed_block, text).rstrip() + "\n"
-else:
-    separator = "\n" if text and not text.endswith("\n") else ""
-    updated = f"{text}{separator}{managed_block}".rstrip() + "\n"
+    updated = updated + ("\n" if updated else "")
 
 config_path.write_text(updated, encoding="utf-8")
 PY
@@ -203,9 +184,6 @@ Installed ${PLUGIN_NAME} to:
 
 Updated marketplace:
   ${MARKETPLACE_PATH}
-
-Updated Codex MCP config:
-  ${CODEX_CONFIG_PATH}
 
 Next steps:
   1. Export CANVAS_BASE_URL and CANVAS_ACCESS_TOKEN
