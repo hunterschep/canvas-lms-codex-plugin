@@ -59,6 +59,7 @@ function validateStructure() {
   assert(canvasServer, 'Missing ".mcp.json" mcpServers.canvas definition');
   assert(canvasServer.command === "node", 'mcpServers.canvas.command must be "node"');
   assert(Array.isArray(canvasServer.args) && canvasServer.args[0] === "./scripts/canvas-mcp-server.mjs", "mcp server args must point to the stdio entrypoint");
+  assert(canvasServer.cwd === ".", 'mcpServers.canvas.cwd must be "." so the installed plugin root is used as the working directory');
 
   const marketplacePath = resolve(repoRoot, ".agents/plugins/marketplace.json");
   assert(existsSync(marketplacePath), "Missing repo marketplace file at .agents/plugins/marketplace.json");

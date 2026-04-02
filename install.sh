@@ -6,10 +6,12 @@ REPO_SLUG="hunterschep/canvas-lms-codex-plugin"
 REPO_URL="https://github.com/${REPO_SLUG}.git"
 DEFAULT_PERSONAL_TARGET="${HOME}/.codex/plugins/${PLUGIN_NAME}"
 DEFAULT_PERSONAL_MARKETPLACE="${HOME}/.agents/plugins/marketplace.json"
+CODEX_CONFIG_PATH="${HOME}/.codex/config.toml"
 
 MODE="personal"
 REPO_ROOT=""
 FORCE="0"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 usage() {
   cat <<'EOF'
@@ -64,19 +66,31 @@ else
   MARKETPLACE_DISPLAY_NAME="Community Local Plugins"
 fi
 
+USE_EXISTING_TARGET="0"
+if [[ "${SCRIPT_DIR}" == "${TARGET_DIR}" ]]; then
+  USE_EXISTING_TARGET="1"
+fi
+
 if [[ -e "${TARGET_DIR}" ]]; then
-  if [[ "${FORCE}" != "1" ]]; then
+  if [[ "${USE_EXISTING_TARGET}" == "1" ]]; then
+    echo "Using existing plugin files at ${TARGET_DIR}"
+  elif [[ "${FORCE}" != "1" ]]; then
     echo "Target already exists: ${TARGET_DIR}" >&2
     echo "Re-run with --force to replace it." >&2
     exit 1
   fi
-  rm -rf "${TARGET_DIR}"
+  if [[ "${USE_EXISTING_TARGET}" != "1" ]]; then
+    rm -rf "${TARGET_DIR}"
+  fi
 fi
 
 mkdir -p "$(dirname "${TARGET_DIR}")"
 mkdir -p "$(dirname "${MARKETPLACE_PATH}")"
+mkdir -p "$(dirname "${CODEX_CONFIG_PATH}")"
 
-git clone --depth 1 "${REPO_URL}" "${TARGET_DIR}"
+if [[ "${USE_EXISTING_TARGET}" != "1" ]]; then
+  git clone --depth 1 "${REPO_URL}" "${TARGET_DIR}"
+fi
 
 python3 - "${MARKETPLACE_PATH}" "${MARKETPLACE_SOURCE_PATH}" "${MARKETPLACE_NAME}" "${MARKETPLACE_DISPLAY_NAME}" <<'PY'
 import json
@@ -134,6 +148,55 @@ with open(marketplace_path, "w", encoding="utf-8") as f:
     f.write("\n")
 PY
 
+python3 - "${CODEX_CONFIG_PATH}" "${TARGET_DIR}" <<'PY'
+import json
+import pathlib
+import re
+import sys
+
+config_path = pathlib.Path(sys.argv[1]).expanduser()
+target_dir = pathlib.Path(sys.argv[2]).expanduser().resolve()
+server_path = (target_dir / "scripts" / "canvas-mcp-server.mjs").resolve()
+
+start_marker = "# BEGIN canvas-lms managed MCP server"
+end_marker = "# END canvas-lms managed MCP server"
+
+managed_block = "\n".join([
+    start_marker,
+    "[mcp_servers.canvas]",
+    'command = "node"',
+    f"args = [{json.dumps(str(server_path))}]",
+    "startup_timeout_sec = 15",
+    "tool_timeout_sec = 120",
+    end_marker,
+    "",
+])
+
+if config_path.exists():
+    text = config_path.read_text(encoding="utf-8")
+else:
+    text = ""
+
+marker_pattern = re.compile(
+    rf"\n?{re.escape(start_marker)}\n.*?{re.escape(end_marker)}\n?",
+    re.DOTALL,
+)
+
+section_pattern = re.compile(
+    r"(?ms)^\[mcp_servers\.canvas\]\n(?:.+\n)*?(?=^\[|\Z)"
+)
+
+if start_marker in text and end_marker in text:
+    updated = marker_pattern.sub(managed_block, text).rstrip() + "\n"
+elif section_pattern.search(text):
+    updated = section_pattern.sub(managed_block, text).rstrip() + "\n"
+else:
+    separator = "\n" if text and not text.endswith("\n") else ""
+    updated = f"{text}{separator}{managed_block}".rstrip() + "\n"
+
+config_path.write_text(updated, encoding="utf-8")
+PY
+
 cat <<EOF
 Installed ${PLUGIN_NAME} to:
   ${TARGET_DIR}
@@ -141,8 +204,12 @@ Installed ${PLUGIN_NAME} to:
 Updated marketplace:
   ${MARKETPLACE_PATH}
 
+Updated Codex MCP config:
+  ${CODEX_CONFIG_PATH}
+
 Next steps:
   1. Export CANVAS_BASE_URL and CANVAS_ACCESS_TOKEN
   2. Restart Codex
   3. Open /plugins and install "Canvas LMS" from the updated marketplace
+  4. Start a new thread and ask Codex to use Canvas
 EOF

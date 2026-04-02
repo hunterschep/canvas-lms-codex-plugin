@@ -28,46 +28,64 @@ This is a community-built plugin created by an independent user.
 - pull recent announcements across courses
 - fall back to unsupported student-relevant Canvas REST endpoints under `/api/v1/...` and `/api/quiz/v1/...`
 
-## Quick Install
+## Install
 
-Personal install from GitHub with a one-liner:
+Choose one install mode.
+
+### Personal install
+
+Installs the plugin for your user account and makes it available across projects.
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/hunterschep/canvas-lms-codex-plugin/main/install.sh | bash
 ```
 
-That installs the plugin into `~/.codex/plugins/canvas-lms` and updates `~/.agents/plugins/marketplace.json`.
+This installs to `~/.codex/plugins/canvas-lms`, updates `~/.agents/plugins/marketplace.json`, and writes a managed `canvas` MCP entry to `~/.codex/config.toml`.
 
-Workspace install into the current repo:
+### Repo install
+
+Installs the plugin only for one workspace.
+
+From the repo root:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/hunterschep/canvas-lms-codex-plugin/main/install.sh | bash -s -- --repo-root "$PWD"
 ```
 
-That installs the plugin into `./plugins/canvas-lms` and updates `./.agents/plugins/marketplace.json`.
-
-## Manual Install
-
-Clone the repository:
+From the plugin directory inside a repo:
 
 ```bash
-git clone https://github.com/hunterschep/canvas-lms-codex-plugin.git
-cd canvas-lms-codex-plugin
+cd /absolute/path/to/your/repo/plugins/canvas-lms
+./install.sh --repo-root /absolute/path/to/your/repo --force
 ```
 
-Install it for your user:
+This installs to `/absolute/path/to/your/repo/plugins/canvas-lms`, updates `/absolute/path/to/your/repo/.agents/plugins/marketplace.json`, and writes the managed `canvas` MCP entry to `~/.codex/config.toml`.
+
+If you want repo-only behavior, do not also run the personal install.
+
+### What the installer writes
+
+The installer registers the Canvas server in `~/.codex/config.toml`:
+
+```toml
+# BEGIN canvas-lms managed MCP server
+[mcp_servers.canvas]
+command = "node"
+args = ["/absolute/path/to/your/installed/plugin/scripts/canvas-mcp-server.mjs"]
+startup_timeout_sec = 15
+tool_timeout_sec = 120
+# END canvas-lms managed MCP server
+```
+
+This avoids local-plugin startup issues where Codex fails to resolve the bundled MCP server path from the correct working directory during install or first use.
+
+If you are switching from personal install to repo-only install, remove the old personal copy:
 
 ```bash
-./install.sh
+rm -rf ~/.codex/plugins/canvas-lms
 ```
 
-Or install it into a specific workspace:
-
-```bash
-./install.sh --repo-root /absolute/path/to/your/repo
-```
-
-After installation, restart Codex and open the plugin directory. The plugin should appear in the marketplace that the installer updated.
+Then remove the `canvas-lms` entry from `~/.agents/plugins/marketplace.json`, or delete that marketplace file if it only contained this plugin.
 
 ## Canvas Setup
 
@@ -92,6 +110,15 @@ Notes:
 - `CANVAS_ACCEPT_STRING_IDS` defaults to enabled so large Canvas IDs do not lose precision in JavaScript.
 - `CANVAS_ACCESS_TOKEN` should be scoped to the minimum permissions your Canvas setup allows.
 
+## Start Codex
+
+After installing or updating:
+
+1. Restart Codex completely.
+2. Open `/plugins`.
+3. Install or enable `Canvas LMS` from the marketplace you updated.
+4. Start a new thread.
+
 ## Use It In Codex
 
 Example prompts:
@@ -102,7 +129,7 @@ Example prompts:
 - `Show which assignments in course 123 are graded, missing, or still unsubmitted.`
 - `Summarize the latest announcements across my active classes.`
 
-## Student-Focused Tool Surface
+## Tool Surface
 
 The plugin exposes 20 Canvas tools through MCP:
 
@@ -125,9 +152,9 @@ The plugin exposes 20 Canvas tools through MCP:
 
 The fallback is intentionally restricted. It only allows same-origin Canvas REST paths under `/api/v1/...` and `/api/quiz/v1/...`, and writes still require `allow_mutation: true`.
 
-## Plugin Structure
+## Development
 
-This repository is also the plugin root:
+This repository is the plugin root:
 
 - `.codex-plugin/plugin.json` contains the Codex plugin manifest
 - `.mcp.json` wires the local MCP server
@@ -138,36 +165,25 @@ This repository is also the plugin root:
 - `scripts/validate-plugin.mjs` validates the package shape and MCP handshake
 - `install.sh` installs the plugin and updates the appropriate marketplace file
 
-## Validation
-
-Run the bundled validation script from the repo root:
+Validate the plugin:
 
 ```bash
 node ./scripts/validate-plugin.mjs
 ```
 
-It checks:
+## Troubleshooting
 
-- required plugin files
-- manifest and MCP config shape
-- marketplace entry shape
-- script syntax with `node --check`
-- MCP stdio `initialize` and `tools/list` behavior
+If Codex shows an MCP startup timeout for `canvas` during install or first use:
 
-## Development
+- uninstall the plugin from `/plugins`
+- restart Codex
+- reinstall the plugin with the install mode you actually want
+- start a new thread after reinstalling
+- confirm the managed `[mcp_servers.canvas]` block exists in `~/.codex/config.toml`
+- confirm that block points at the install you expect
+- remove any stale home-local `canvas-lms` marketplace entry if `/plugins` still shows duplicates
 
-If you want to work on the plugin locally:
-
-```bash
-git clone https://github.com/hunterschep/canvas-lms-codex-plugin.git
-cd canvas-lms-codex-plugin
-node ./scripts/validate-plugin.mjs
-```
-
-Then either:
-
-- run `./install.sh` for a personal install
-- run `./install.sh --repo-root /path/to/repo` for a workspace install
+This plugin ships a bundled `.mcp.json`, and the installer also registers the same server in `~/.codex/config.toml` with an absolute path to the installed plugin copy for reliable startup.
 
 ## Security Notes
 
