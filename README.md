@@ -63,7 +63,7 @@ This copies the plugin to `/absolute/path/to/your/repo/plugins/canvas-lms` and u
 
 If you want repo-only behavior, do not also run the personal install.
 
-The installer only copies the plugin and updates the selected marketplace file. It does not register `canvas` as a global `[mcp_servers.canvas]` entry.
+The installer updates the selected marketplace file and materializes an install-local `.mcp.json` with an absolute path to `scripts/canvas-mcp-server.mjs`. It does not register `canvas` as a global `[mcp_servers.canvas]` entry.
 
 If you are upgrading from an older version of this plugin, rerun the installer once. It removes the legacy `canvas-lms managed MCP server` block from `~/.codex/config.toml`.
 
@@ -182,6 +182,8 @@ If Codex shows an MCP startup timeout for `canvas` during install or first use:
 - if the plugin is installed but you do not want it active in other projects, disable or uninstall it from `/plugins`
 
 This plugin relies on the standard bundled `.mcp.json` flow described in the Codex plugin docs. It does not install a global `canvas` MCP server in `~/.codex/config.toml`.
+
+Current Codex builds may launch bundled MCP commands from the session working directory instead of the installed plugin root. The installer therefore rewrites the installed plugin's `.mcp.json` to use an absolute entrypoint path so the bundled server starts reliably without a global `mcp_servers.canvas` override.
 
 ## Security Notes
 

@@ -91,6 +91,26 @@ if [[ "${USE_EXISTING_TARGET}" != "1" ]]; then
   git clone --depth 1 "${REPO_URL}" "${TARGET_DIR}"
 fi
 
+python3 - "${TARGET_DIR}" <<'PY'
+import json
+import pathlib
+import sys
+
+target_dir = pathlib.Path(sys.argv[1]).expanduser().resolve()
+mcp_path = target_dir / ".mcp.json"
+server_path = (target_dir / "scripts" / "canvas-mcp-server.mjs").resolve()
+
+data = json.loads(mcp_path.read_text(encoding="utf-8"))
+canvas = data.get("mcpServers", {}).get("canvas")
+if not isinstance(canvas, dict):
+    raise SystemExit('Missing ".mcp.json" mcpServers.canvas definition')
+
+canvas["args"] = [str(server_path)]
+canvas.pop("cwd", None)
+
+mcp_path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+PY
+
 python3 - "${MARKETPLACE_PATH}" "${MARKETPLACE_SOURCE_PATH}" "${MARKETPLACE_NAME}" "${MARKETPLACE_DISPLAY_NAME}" <<'PY'
 import json
 import os
@@ -188,6 +208,6 @@ Updated marketplace:
 Next steps:
   1. Export CANVAS_BASE_URL and CANVAS_ACCESS_TOKEN
   2. Restart Codex
-  3. Open /plugins and install "Canvas LMS" from the updated marketplace
+  3. Open /plugins and reinstall "Canvas LMS" from the updated marketplace
   4. Start a new thread and ask Codex to use Canvas
 EOF

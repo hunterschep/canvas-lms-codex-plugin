@@ -58,7 +58,11 @@ function validateStructure() {
   const canvasServer = mcpConfig?.mcpServers?.canvas;
   assert(canvasServer, 'Missing ".mcp.json" mcpServers.canvas definition');
   assert(canvasServer.command === "node", 'mcpServers.canvas.command must be "node"');
-  assert(Array.isArray(canvasServer.args) && canvasServer.args[0] === "./scripts/canvas-mcp-server.mjs", "mcp server args must point to the stdio entrypoint");
+  assert(Array.isArray(canvasServer.args) && typeof canvasServer.args[0] === "string", "mcp server args must include the stdio entrypoint");
+  assert(
+    canvasServer.args[0] === "./scripts/canvas-mcp-server.mjs" || /[/\\]scripts[/\\]canvas-mcp-server\.mjs$/.test(canvasServer.args[0]),
+    "mcp server args must point to canvas-mcp-server.mjs"
+  );
   assert(!Object.prototype.hasOwnProperty.call(canvasServer, "cwd"), 'mcpServers.canvas should not set "cwd"; bundled MCP paths should stay plugin-root-relative');
 
   const marketplacePath = resolve(repoRoot, ".agents/plugins/marketplace.json");

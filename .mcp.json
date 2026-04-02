@@ -3,7 +3,7 @@
     "canvas": {
       "command": "node",
       "args": [
-        "./scripts/canvas-mcp-server.mjs"
+        "/Users/hunterschep/canvas/plugins/canvas-lms/scripts/canvas-mcp-server.mjs"
       ],
       "env_vars": [
         "CANVAS_BASE_URL",
