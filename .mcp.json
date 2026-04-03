@@ -1,9 +1,9 @@
 {
   "mcpServers": {
     "canvas": {
-      "command": "/Users/hunterschep/.nvm/versions/node/v22.22.2/bin/node",
+      "command": "node",
       "args": [
-        "/Users/hunterschep/canvas/plugins/canvas-lms/scripts/canvas-mcp-server.mjs"
+        "./scripts/canvas-mcp-server.mjs"
       ],
       "env_vars": [
         "CANVAS_BASE_URL",

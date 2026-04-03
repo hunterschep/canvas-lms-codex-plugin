@@ -70,15 +70,9 @@ function validateStructure() {
   const mcpConfig = readJson(".mcp.json");
   const canvasServer = mcpConfig?.mcpServers?.canvas;
   assert(canvasServer, 'Missing ".mcp.json" mcpServers.canvas definition');
-  assert(
-    canvasServer.command === "node" || /[/\\]node(?:\.exe)?$/.test(canvasServer.command),
-    'mcpServers.canvas.command must be "node" or an absolute node binary path'
-  );
+  assert(canvasServer.command === "node", 'Source .mcp.json mcpServers.canvas.command must be "node"');
   assert(Array.isArray(canvasServer.args) && typeof canvasServer.args[0] === "string", "mcp server args must include the stdio entrypoint");
-  assert(
-    canvasServer.args[0] === "./scripts/canvas-mcp-server.mjs" || /[/\\]scripts[/\\]canvas-mcp-server\.mjs$/.test(canvasServer.args[0]),
-    "mcp server args must point to canvas-mcp-server.mjs"
-  );
+  assert(canvasServer.args[0] === "./scripts/canvas-mcp-server.mjs", 'Source .mcp.json must point to "./scripts/canvas-mcp-server.mjs"');
   assert(!Object.prototype.hasOwnProperty.call(canvasServer, "cwd"), 'mcpServers.canvas should not set "cwd"; bundled MCP paths should stay plugin-root-relative');
 
   const marketplacePath = resolve(repoRoot, ".agents/plugins/marketplace.json");
@@ -103,6 +97,8 @@ function validateStructure() {
   assert(!installer.includes("[mcp_servers.canvas]"), "install.sh should not write a global [mcp_servers.canvas] block");
   assert(installer.includes('MARKETPLACE_NAME="canvas-local-plugins"'), 'install.sh must keep the repo marketplace name stable as "canvas-local-plugins"');
   assert(installer.includes('NODE_BIN="$(command -v node || true)"'), "install.sh must resolve an absolute node binary for the installed MCP config");
+  assert(installer.includes('canvas["command"] = str(node_bin)'), "install.sh must rewrite the installed MCP command to an absolute node path");
+  assert(installer.includes('canvas["args"] = [str(server_path)]'), "install.sh must rewrite the installed MCP script path to an absolute path");
 
   return manifest;
 }

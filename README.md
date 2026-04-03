@@ -65,7 +65,7 @@ This copies the plugin to `/absolute/path/to/your/repo/plugins/canvas-lms` and u
 
 If you want repo-only behavior, do not also run the personal install.
 
-The installer keeps the repo marketplace name stable as `canvas-local-plugins`, rewrites the installed plugin `.mcp.json` to use absolute paths for both the Node binary and `scripts/canvas-mcp-server.mjs`, clears stale cached `canvas-lms` bundles, and removes stale `canvas-lms@...` enablement blocks from `~/.codex/config.toml`. It does not register `canvas` as a global `[mcp_servers.canvas]` entry.
+The committed source `.mcp.json` stays portable in git. The installer rewrites the installed plugin copy to use absolute paths for both the Node binary and `scripts/canvas-mcp-server.mjs`, keeps the repo marketplace name stable as `canvas-local-plugins`, clears stale cached `canvas-lms` bundles, and removes stale `canvas-lms@...` enablement blocks from `~/.codex/config.toml`. It does not register `canvas` as a global `[mcp_servers.canvas]` entry.
 
 If you are upgrading from an older version of this plugin, rerun the installer once. It removes the legacy `canvas-lms managed MCP server` block from `~/.codex/config.toml`.
 
@@ -189,7 +189,27 @@ This plugin relies on the standard bundled `.mcp.json` flow described in the Cod
 
 Current Codex builds may launch bundled MCP commands from the session working directory and without the same shell PATH your interactive session has. The installer therefore rewrites the installed plugin's `.mcp.json` to use absolute paths for both `node` and the MCP entrypoint so the bundled server starts reliably without a global `mcp_servers.canvas` override.
 
-The bundled MCP server accepts both CRLF-framed and LF-framed stdio messages so it remains compatible with different MCP client implementations.
+The bundled MCP server accepts:
+
+- `Content-Length` framed MCP messages with CRLF separators
+- `Content-Length` framed MCP messages with LF separators
+- raw JSON and newline-delimited JSON-RPC
+
+It also mirrors the client's transport style on replies. That matters because current Codex local-plugin startup may send raw JSON `initialize` requests instead of a framed MCP envelope.
+
+## Why It Broke
+
+Two issues were interacting:
+
+- startup path resolution: local plugin installs could fail if Codex launched the bundled MCP server without the expected working directory or shell `PATH`
+- transport mismatch: the original server only understood framed MCP input and always replied with framed output, while Codex's local plugin startup path sent raw JSON `initialize`
+
+## Why It Works Now
+
+- the installer renders absolute `node` and server paths into the installed plugin copy
+- the server accepts both framed and raw startup messages
+- the server replies in the same transport style the client used
+- the validator exercises all supported startup styles so the regression is caught before release
 
 ## Security Notes
 
