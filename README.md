@@ -10,6 +10,8 @@ Student-first Canvas LMS workflows for Codex, packaged as a local plugin with a 
 
 This plugin helps Codex read and summarize the parts of Canvas students actually use: courses, grades, planner items, calendar items, pages, assignments, quizzes, modules, submissions, and announcements.
 
+The plugin is presented in Codex as an interactive productivity plugin with bundled Canvas MCP tools.
+
 ## Community Disclaimer
 
 This is a community-built plugin created by an independent user.
@@ -63,7 +65,7 @@ This copies the plugin to `/absolute/path/to/your/repo/plugins/canvas-lms` and u
 
 If you want repo-only behavior, do not also run the personal install.
 
-The installer keeps the repo marketplace name stable as `canvas-local-plugins`, rewrites the installed plugin `.mcp.json` to use an absolute path to `scripts/canvas-mcp-server.mjs`, clears stale cached `canvas-lms` bundles, and removes stale `canvas-lms@...` enablement blocks from `~/.codex/config.toml`. It does not register `canvas` as a global `[mcp_servers.canvas]` entry.
+The installer keeps the repo marketplace name stable as `canvas-local-plugins`, rewrites the installed plugin `.mcp.json` to use absolute paths for both the Node binary and `scripts/canvas-mcp-server.mjs`, clears stale cached `canvas-lms` bundles, and removes stale `canvas-lms@...` enablement blocks from `~/.codex/config.toml`. It does not register `canvas` as a global `[mcp_servers.canvas]` entry.
 
 If you are upgrading from an older version of this plugin, rerun the installer once. It removes the legacy `canvas-lms managed MCP server` block from `~/.codex/config.toml`.
 
@@ -185,7 +187,9 @@ If you previously installed a repo copy that used the marketplace name `local-re
 
 This plugin relies on the standard bundled `.mcp.json` flow described in the Codex plugin docs. It does not install a global `canvas` MCP server in `~/.codex/config.toml`.
 
-Current Codex builds may launch bundled MCP commands from the session working directory instead of the installed plugin root. The installer therefore rewrites the installed plugin's `.mcp.json` to use an absolute entrypoint path so the bundled server starts reliably without a global `mcp_servers.canvas` override.
+Current Codex builds may launch bundled MCP commands from the session working directory and without the same shell PATH your interactive session has. The installer therefore rewrites the installed plugin's `.mcp.json` to use absolute paths for both `node` and the MCP entrypoint so the bundled server starts reliably without a global `mcp_servers.canvas` override.
+
+The bundled MCP server accepts both CRLF-framed and LF-framed stdio messages so it remains compatible with different MCP client implementations.
 
 ## Security Notes
 

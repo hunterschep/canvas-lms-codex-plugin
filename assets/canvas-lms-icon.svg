@@ -1,0 +1,11 @@
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title">
+  <title>Canvas LMS icon</title>
+  <rect width="128" height="128" rx="28" fill="#C0392B"/>
+  <circle cx="64" cy="64" r="34" fill="none" stroke="#FFF7F5" stroke-width="12"/>
+  <circle cx="64" cy="30" r="8" fill="#FFF7F5"/>
+  <circle cx="93.44" cy="47" r="8" fill="#FFF7F5"/>
+  <circle cx="93.44" cy="81" r="8" fill="#FFF7F5"/>
+  <circle cx="64" cy="98" r="8" fill="#FFF7F5"/>
+  <circle cx="34.56" cy="81" r="8" fill="#FFF7F5"/>
+  <circle cx="34.56" cy="47" r="8" fill="#FFF7F5"/>
+</svg>

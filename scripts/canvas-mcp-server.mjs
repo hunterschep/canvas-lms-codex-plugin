@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import process from "node:process";
+import { appendFileSync } from "node:fs";
 import {
   JsonRpcError,
   PROTOCOL_VERSIONS,
@@ -18,10 +19,125 @@ import { TOOL_DEFINITIONS, TOOL_LOOKUP, serializeTool } from "./canvas-mcp-tools
 let negotiatedProtocolVersion = null;
 let initialized = false;
 let inputBuffer = Buffer.alloc(0);
+let transportMode = null;
+const DEBUG_LOG_PATH = "/tmp/canvas-lms-mcp-debug.log";
+const keepAliveTimer = setInterval(() => {}, 60_000);
+
+function debug(event, details = undefined) {
+  const payload = {
+    ts: new Date().toISOString(),
+    pid: process.pid,
+    event,
+    ...(details === undefined ? {} : { details }),
+  };
+
+  try {
+    appendFileSync(DEBUG_LOG_PATH, `${JSON.stringify(payload)}\n`, "utf8");
+  } catch (_error) {
+    // Ignore debug logging failures to keep the MCP transport stable.
+  }
+}
+
+function findHeaderBoundary(buffer) {
+  const crlfIndex = buffer.indexOf("\r\n\r\n");
+  const lfIndex = buffer.indexOf("\n\n");
+
+  if (crlfIndex === -1) {
+    return lfIndex === -1 ? null : { headerEnd: lfIndex, separatorLength: 2 };
+  }
+
+  if (lfIndex === -1 || crlfIndex <= lfIndex) {
+    return { headerEnd: crlfIndex, separatorLength: 4 };
+  }
+
+  return { headerEnd: lfIndex, separatorLength: 2 };
+}
+
+function handleDecodedMessage(message) {
+  debug("read_message", {
+    hasId: Object.prototype.hasOwnProperty.call(message, "id"),
+    method: typeof message.method === "string" ? message.method : null,
+    id: message.id ?? null,
+  });
+  void handleMessage(message).catch((error) => {
+    log("Unhandled MCP message error", {
+      message: error?.message ?? String(error),
+      stack: error?.stack,
+    });
+    debug("handle_message_error", {
+      message: error?.message ?? String(error),
+    });
+  });
+}
+
+function tryParseRawJsonMessages() {
+  if (inputBuffer.length === 0) {
+    return false;
+  }
+
+  const text = inputBuffer.toString("utf8");
+  const trimmed = text.trimStart();
+  if (!trimmed.startsWith("{") && !trimmed.startsWith("[")) {
+    return false;
+  }
+
+  try {
+    const message = JSON.parse(text);
+    transportMode = transportMode ?? "raw";
+    inputBuffer = Buffer.alloc(0);
+    handleDecodedMessage(message);
+    return true;
+  } catch (_error) {
+    // Fall through and try newline-delimited JSON below.
+  }
+
+  let start = 0;
+  let parsedAny = false;
+  for (let index = 0; index < inputBuffer.length; index += 1) {
+    if (inputBuffer[index] !== 0x0a) {
+      continue;
+    }
+
+    const lineStart = start;
+    const lineBuffer = inputBuffer.slice(start, index > start && inputBuffer[index - 1] === 0x0d ? index - 1 : index);
+    const line = lineBuffer.toString("utf8").trim();
+    start = index + 1;
+
+    if (line === "") {
+      continue;
+    }
+
+    try {
+      const message = JSON.parse(line);
+      transportMode = transportMode ?? "raw";
+      parsedAny = true;
+      handleDecodedMessage(message);
+    } catch (_error) {
+      inputBuffer = inputBuffer.slice(lineStart);
+      return parsedAny;
+    }
+  }
+
+  if (parsedAny) {
+    inputBuffer = inputBuffer.slice(start);
+  }
+
+  return parsedAny;
+}
 
 function writeMessage(message) {
   const json = JSON.stringify(message);
-  const header = `Content-Length: ${Buffer.byteLength(json, "utf8")}\r\nContent-Type: application/json\r\n\r\n`;
+  debug("write_message", {
+    transportMode,
+    hasId: Object.prototype.hasOwnProperty.call(message, "id"),
+    method: message.method ?? null,
+    id: message.id ?? null,
+  });
+  if (transportMode === "raw") {
+    process.stdout.write(`${json}\n`);
+    return;
+  }
+  const header = `Content-Length: ${Buffer.byteLength(json, "utf8")}\r\n\r\n`;
   process.stdout.write(header + json);
 }
 
@@ -42,7 +158,7 @@ function writeError(id, error) {
 }
 
 function parseContentLength(headerText) {
-  const lines = headerText.split("\r\n");
+  const lines = headerText.split(/\r?\n/);
   for (const line of lines) {
     const separatorIndex = line.indexOf(":");
     if (separatorIndex === -1) {
@@ -60,11 +176,16 @@ function parseContentLength(headerText) {
 
 function parseMessages() {
   while (true) {
-    const headerEnd = inputBuffer.indexOf("\r\n\r\n");
-    if (headerEnd === -1) {
+    const boundary = findHeaderBoundary(inputBuffer);
+    if (!boundary) {
+      if (tryParseRawJsonMessages()) {
+        continue;
+      }
       return;
     }
 
+    transportMode = transportMode ?? "framed";
+    const { headerEnd, separatorLength } = boundary;
     const headerText = inputBuffer.slice(0, headerEnd).toString("utf8");
     const contentLength = parseContentLength(headerText);
 
@@ -74,12 +195,12 @@ function parseMessages() {
       return;
     }
 
-    const messageEnd = headerEnd + 4 + contentLength;
+    const messageEnd = headerEnd + separatorLength + contentLength;
     if (inputBuffer.length < messageEnd) {
       return;
     }
 
-    const bodyBuffer = inputBuffer.slice(headerEnd + 4, messageEnd);
+    const bodyBuffer = inputBuffer.slice(headerEnd + separatorLength, messageEnd);
     inputBuffer = inputBuffer.slice(messageEnd);
 
     let message;
@@ -87,15 +208,11 @@ function parseMessages() {
       message = JSON.parse(bodyBuffer.toString("utf8"));
     } catch (error) {
       log("Dropping malformed MCP JSON payload", { error: error.message });
+      debug("drop_malformed_json", { error: error.message });
       continue;
     }
 
-    void handleMessage(message).catch((error) => {
-      log("Unhandled MCP message error", {
-        message: error?.message ?? String(error),
-        stack: error?.stack,
-      });
-    });
+    handleDecodedMessage(message);
   }
 }
 
@@ -196,12 +313,25 @@ async function handleMessage(message) {
 }
 
 process.stdin.on("data", (chunk) => {
+  debug("stdin_data", {
+    bytes: chunk.length,
+    preview: chunk.slice(0, 160).toString("utf8"),
+    hex: chunk.slice(0, 48).toString("hex"),
+  });
   inputBuffer = Buffer.concat([inputBuffer, chunk]);
   parseMessages();
 });
 
+process.stdin.resume();
+debug("server_start", {
+  cwd: process.cwd(),
+  argv: process.argv.slice(2),
+  hasCanvasBaseUrl: Boolean(process.env.CANVAS_BASE_URL),
+  hasCanvasAccessToken: Boolean(process.env.CANVAS_ACCESS_TOKEN || process.env.CANVAS_API_TOKEN),
+});
+
 process.stdin.on("end", () => {
-  process.exit(0);
+  debug("stdin_end");
 });
 
 process.on("uncaughtException", (error) => {
@@ -211,8 +341,12 @@ process.on("uncaughtException", (error) => {
     initialized,
     protocolVersion: negotiatedProtocolVersion,
   });
+  debug("uncaught_exception", { message: error.message });
 });
 
 process.on("unhandledRejection", (reason) => {
   log("Unhandled rejection", reason);
+  debug("unhandled_rejection", {
+    message: reason?.message ?? String(reason),
+  });
 });

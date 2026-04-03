@@ -4,6 +4,7 @@
   "description": "Community-built student-focused Canvas LMS workflows and API access for Codex.",
   "author": {
     "name": "Hunter Schep",
+    "email": "67876717+hunterschep@users.noreply.github.com",
     "url": "https://github.com/hunterschep"
   },
   "homepage": "https://github.com/hunterschep/canvas-lms-codex-plugin",
@@ -28,15 +29,20 @@
     "developerName": "Hunter Schep",
     "category": "Productivity",
     "capabilities": [
-      "Read",
+      "Interactive",
       "Write"
     ],
     "websiteURL": "https://github.com/hunterschep/canvas-lms-codex-plugin",
+    "privacyPolicyURL": "https://github.com/hunterschep/canvas-lms-codex-plugin/blob/main/PRIVACY.md",
+    "termsOfServiceURL": "https://github.com/hunterschep/canvas-lms-codex-plugin/blob/main/TERMS.md",
     "defaultPrompt": [
       "Show my current Canvas courses and grades.",
       "Summarize this Canvas course's front page, modules, and assignments.",
       "Show my upcoming Canvas work, quizzes, and announcements."
     ],
-    "brandColor": "#C0392B"
+    "brandColor": "#C0392B",
+    "composerIcon": "./assets/canvas-lms-icon.svg",
+    "logo": "./assets/canvas-lms-logo.svg",
+    "screenshots": []
   }
 }

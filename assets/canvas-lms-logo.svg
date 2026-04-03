@@ -1,0 +1,15 @@
+<svg width="512" height="160" viewBox="0 0 512 160" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="title">
+  <title>Canvas LMS logo</title>
+  <rect width="160" height="160" rx="32" fill="#C0392B"/>
+  <circle cx="80" cy="80" r="40" fill="none" stroke="#FFF7F5" stroke-width="14"/>
+  <circle cx="80" cy="40" r="9" fill="#FFF7F5"/>
+  <circle cx="114.64" cy="60" r="9" fill="#FFF7F5"/>
+  <circle cx="114.64" cy="100" r="9" fill="#FFF7F5"/>
+  <circle cx="80" cy="120" r="9" fill="#FFF7F5"/>
+  <circle cx="45.36" cy="100" r="9" fill="#FFF7F5"/>
+  <circle cx="45.36" cy="60" r="9" fill="#FFF7F5"/>
+  <g fill="#111111">
+    <text x="192" y="72" font-family="Helvetica, Arial, sans-serif" font-size="40" font-weight="700">Canvas LMS</text>
+    <text x="192" y="112" font-family="Helvetica, Arial, sans-serif" font-size="24" fill="#5C5C5C">Community-built Codex plugin</text>
+  </g>
+</svg>

@@ -91,16 +91,23 @@ if [[ "${USE_EXISTING_TARGET}" != "1" ]]; then
   git clone --depth 1 "${REPO_URL}" "${TARGET_DIR}"
 fi
 
+NODE_BIN="$(command -v node || true)"
+if [[ -z "${NODE_BIN}" ]]; then
+  echo "Could not find node on PATH. Install Node.js before running install.sh." >&2
+  exit 1
+fi
+
 if [[ -d "${HOME}/.codex/plugins/cache" ]]; then
   find "${HOME}/.codex/plugins/cache" -mindepth 2 -maxdepth 2 -type d -name "${PLUGIN_NAME}" -exec rm -rf {} +
 fi
 
-python3 - "${TARGET_DIR}" <<'PY'
+python3 - "${TARGET_DIR}" "${NODE_BIN}" <<'PY'
 import json
 import pathlib
 import sys
 
 target_dir = pathlib.Path(sys.argv[1]).expanduser().resolve()
+node_bin = pathlib.Path(sys.argv[2]).expanduser().resolve()
 mcp_path = target_dir / ".mcp.json"
 server_path = (target_dir / "scripts" / "canvas-mcp-server.mjs").resolve()
 
@@ -109,6 +116,7 @@ canvas = data.get("mcpServers", {}).get("canvas")
 if not isinstance(canvas, dict):
     raise SystemExit('Missing ".mcp.json" mcpServers.canvas definition')
 
+canvas["command"] = str(node_bin)
 canvas["args"] = [str(server_path)]
 canvas.pop("cwd", None)
 
