@@ -34,6 +34,8 @@ This is a community-built plugin created by an independent user.
 
 Choose one install mode.
 
+The published installer supports both `curl | bash` and direct `./install.sh` usage.
+
 ### Personal install
 
 Installs the plugin for your user account and makes it available across projects.

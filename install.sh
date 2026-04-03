@@ -11,7 +11,11 @@ CODEX_CONFIG_PATH="${HOME}/.codex/config.toml"
 MODE="personal"
 REPO_ROOT=""
 FORCE="0"
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SCRIPT_SOURCE="${BASH_SOURCE[0]:-}"
+SCRIPT_DIR=""
+if [[ -n "${SCRIPT_SOURCE}" && "${SCRIPT_SOURCE}" != "bash" && "${SCRIPT_SOURCE}" != "-" ]]; then
+  SCRIPT_DIR="$(cd "$(dirname "${SCRIPT_SOURCE}")" && pwd)"
+fi
 
 usage() {
   cat <<'EOF'
@@ -67,7 +71,7 @@ else
 fi
 
 USE_EXISTING_TARGET="0"
-if [[ "${SCRIPT_DIR}" == "${TARGET_DIR}" ]]; then
+if [[ -n "${SCRIPT_DIR}" && "${SCRIPT_DIR}" == "${TARGET_DIR}" ]]; then
   USE_EXISTING_TARGET="1"
 fi
 

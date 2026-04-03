@@ -96,6 +96,7 @@ function validateStructure() {
   assert(!installer.includes("Updated Codex MCP config"), "install.sh should not register Canvas as a global mcp_servers entry");
   assert(!installer.includes("[mcp_servers.canvas]"), "install.sh should not write a global [mcp_servers.canvas] block");
   assert(installer.includes('MARKETPLACE_NAME="canvas-local-plugins"'), 'install.sh must keep the repo marketplace name stable as "canvas-local-plugins"');
+  assert(installer.includes('SCRIPT_SOURCE="${BASH_SOURCE[0]:-}"'), "install.sh must support being piped to bash without assuming BASH_SOURCE[0] is set");
   assert(installer.includes('NODE_BIN="$(command -v node || true)"'), "install.sh must resolve an absolute node binary for the installed MCP config");
   assert(installer.includes('canvas["command"] = str(node_bin)'), "install.sh must rewrite the installed MCP command to an absolute node path");
   assert(installer.includes('canvas["args"] = [str(server_path)]'), "install.sh must rewrite the installed MCP script path to an absolute path");
