@@ -8,7 +8,7 @@
 
 Student-first Canvas LMS workflows for Codex, packaged as a local plugin with a bundled MCP server.
 
-This plugin helps Codex read and summarize the parts of Canvas students and course teams actually use: courses, grades, planner items, calendar items, users, groups, sections, pages, files, folders, discussions, assignments, quizzes, rubrics, outcomes, modules, submissions, and announcements.
+This plugin helps Codex read and summarize the parts of Canvas students and course teams actually use: courses, grades, planner items, calendar items, users, groups, sections, pages, files, folders, discussions, conversations, search, assignments, quizzes, peer reviews, rubrics, outcomes, modules, submissions, appointments, collaborations, conferences, media, analytics, content exports, migrations, and announcements.
 
 The plugin is presented in Codex as an interactive productivity plugin with bundled Canvas MCP tools.
 
@@ -26,8 +26,11 @@ This is a community-built plugin created by an independent user.
 - summarize upcoming work from Planner and Calendar
 - read and summarize course front pages and pages
 - inspect course users, groups, sections, tabs, files, folders, and discussions
-- inspect assignments, quizzes, submissions, and graded work
+- inspect assignments, quizzes, quiz submissions, peer reviews, submissions, and graded work
 - inspect assignment groups, rubrics, and outcome results
+- search Canvas recipients, public courses, and course content
+- inspect conversations, bookmarks, favorites, appointment groups, collaborations, conferences, media, and external tools
+- inspect course analytics, learning-object dates, blackout dates, content exports, content migrations, and async progress
 - summarize modules and student progress data
 - pull recent announcements across courses
 - fall back to unsupported student-relevant Canvas REST endpoints under `/api/v1/...` and `/api/quiz/v1/...`
@@ -104,7 +107,7 @@ Optional configuration:
 
 ```bash
 export CANVAS_TIMEOUT_MS="30000"
-export CANVAS_USER_AGENT="canvas-lms-codex-plugin/0.3.0"
+export CANVAS_USER_AGENT="canvas-lms-codex-plugin/0.4.0"
 export CANVAS_ACCEPT_STRING_IDS="1"
 ```
 
@@ -135,32 +138,30 @@ Example prompts:
 
 ## Tool Surface
 
-The plugin exposes 54 Canvas tools through MCP:
+The plugin exposes 103 Canvas tools through MCP:
 
-- Identity:
-  `canvas_get_current_user_profile`
-- Courses and grades:
-  `canvas_list_student_courses`, `canvas_get_student_course`, `canvas_get_course_grade_summary`, `canvas_list_course_users`, `canvas_get_course_user`
-- User workflow:
-  `canvas_get_user_profile`, `canvas_list_user_activity_stream`, `canvas_get_user_activity_summary`, `canvas_list_user_todo_items`, `canvas_get_user_todo_item_count`, `canvas_list_user_missing_submissions`, `canvas_list_user_page_views`
+- Identity, courses, and grades:
+  `canvas_get_current_user_profile`, `canvas_list_student_courses`, `canvas_get_student_course`, `canvas_get_course_grade_summary`
+- Users and workflow:
+  `canvas_get_user_profile`, `canvas_list_course_users`, `canvas_get_course_user`, `canvas_list_user_activity_stream`, `canvas_get_user_activity_summary`, `canvas_list_user_todo_items`, `canvas_get_user_todo_item_count`, `canvas_list_user_missing_submissions`, `canvas_list_user_page_views`
 - Planner and calendar:
   `canvas_list_upcoming_planner_items`, `canvas_list_calendar_items`
-- Pages and modules:
-  `canvas_list_course_pages`, `canvas_get_page`, `canvas_get_front_page`, `canvas_list_course_modules`
-- Assignments and quizzes:
-  `canvas_list_course_assignments`, `canvas_list_assignment_groups`, `canvas_get_assignment_group`, `canvas_get_assignment`, `canvas_list_course_quizzes`, `canvas_get_quiz`, `canvas_get_new_quiz`
-- Discussions:
-  `canvas_list_discussion_topics`, `canvas_get_discussion_topic`, `canvas_get_discussion_topic_view`, `canvas_list_discussion_entries`, `canvas_list_discussion_entry_replies`
-- Groups, sections, tabs:
+- Pages, modules, and announcements:
+  `canvas_list_course_pages`, `canvas_get_page`, `canvas_get_front_page`, `canvas_list_course_modules`, `canvas_list_announcements`
+- Assignments, assignment groups, rubrics, and outcomes:
+  `canvas_list_course_assignments`, `canvas_get_assignment`, `canvas_list_assignment_groups`, `canvas_get_assignment_group`, `canvas_list_course_rubrics`, `canvas_get_course_rubric`, `canvas_list_outcome_results`
+- Quizzes, quiz submissions, peer reviews, and grading:
+  `canvas_list_course_quizzes`, `canvas_get_quiz`, `canvas_get_new_quiz`, `canvas_list_quiz_submissions`, `canvas_get_current_quiz_submission`, `canvas_get_quiz_submission`, `canvas_get_quiz_submission_time`, `canvas_list_peer_reviews`, `canvas_list_submission_peer_reviews`, `canvas_list_student_submissions`, `canvas_list_graded_assignments`, `canvas_get_submission`
+- Groups, sections, and tabs:
   `canvas_list_current_user_groups`, `canvas_list_course_groups`, `canvas_get_group`, `canvas_list_group_users`, `canvas_list_course_sections`, `canvas_get_section`, `canvas_list_section_users`, `canvas_list_context_tabs`
-- Files and folders:
-  `canvas_get_files_quota`, `canvas_list_context_files`, `canvas_list_folder_files`, `canvas_get_file`, `canvas_get_file_public_url`, `canvas_list_context_folders`, `canvas_get_folder`
-- Rubrics and outcomes:
-  `canvas_list_course_rubrics`, `canvas_get_course_rubric`, `canvas_list_outcome_results`
-- Submissions and grading:
-  `canvas_list_student_submissions`, `canvas_list_graded_assignments`, `canvas_get_submission`
-- Announcements:
-  `canvas_list_announcements`
+- Files, folders, discussions:
+  `canvas_get_files_quota`, `canvas_list_context_files`, `canvas_list_folder_files`, `canvas_get_file`, `canvas_get_file_public_url`, `canvas_list_context_folders`, `canvas_get_folder`, `canvas_list_discussion_topics`, `canvas_get_discussion_topic`, `canvas_get_discussion_topic_view`, `canvas_list_discussion_entries`, `canvas_list_discussion_entry_replies`
+- Conversations, search, bookmarks, and favorites:
+  `canvas_list_conversations`, `canvas_get_conversation`, `canvas_get_conversations_unread_count`, `canvas_find_conversation_recipients`, `canvas_search_recipients`, `canvas_search_all_courses`, `canvas_search_course_content`, `canvas_list_bookmarks`, `canvas_get_bookmark`, `canvas_list_favorite_courses`, `canvas_list_favorite_groups`
+- Collaboration, scheduling, media, and external tools:
+  `canvas_list_collaborations`, `canvas_list_collaboration_members`, `canvas_list_potential_collaborators`, `canvas_list_conferences`, `canvas_list_appointment_groups`, `canvas_get_appointment_group`, `canvas_list_appointment_group_users`, `canvas_list_appointment_group_groups`, `canvas_get_next_appointment`, `canvas_list_context_media_objects`, `canvas_list_context_media_attachments`, `canvas_list_media_tracks`, `canvas_list_external_tools`, `canvas_get_external_tool`, `canvas_get_external_tool_sessionless_launch`, `canvas_list_visible_course_nav_tools`
+- Analytics, operations, exports, and migrations:
+  `canvas_get_progress`, `canvas_get_course_analytics_activity`, `canvas_get_course_analytics_assignments`, `canvas_list_course_analytics_student_summaries`, `canvas_get_course_analytics_student_activity`, `canvas_get_course_analytics_student_assignments`, `canvas_get_course_analytics_student_communication`, `canvas_get_learning_object_date_details`, `canvas_list_blackout_dates`, `canvas_get_blackout_date`, `canvas_list_content_exports`, `canvas_get_content_export`, `canvas_list_content_migrations`, `canvas_get_content_migration`, `canvas_list_content_migration_issues`, `canvas_get_content_migration_issue`
 - Fallback:
   `canvas_request`
 
@@ -239,7 +240,7 @@ Two issues were interacting:
 
 - no specialized file upload workflow yet
 - no dedicated New Quizzes list workflow yet
-- no dedicated discussion-topic reader yet
+- no first-class write workflow beyond the explicit `canvas_request` fallback
 - real-tenant behavior still depends on your institution's scopes, permissions, and feature flags
 
 ## License

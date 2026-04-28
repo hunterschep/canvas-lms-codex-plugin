@@ -4,6 +4,7 @@ const CONTEXTS = {
   account_id: "accounts",
   course_id: "courses",
   group_id: "groups",
+  section_id: "sections",
   user_id: "users",
 };
 
@@ -19,6 +20,10 @@ export const CONTEXT_ID_PROPERTIES = {
   group_id: {
     type: "string",
     description: "Canvas group ID. Provide exactly one context ID when course_id or user_id is also accepted.",
+  },
+  section_id: {
+    type: "string",
+    description: "Canvas section ID. Provide exactly one context ID when other context IDs are also accepted.",
   },
   user_id: {
     type: "string",

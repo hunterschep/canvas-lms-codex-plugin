@@ -1,6 +1,6 @@
 {
   "name": "canvas-lms",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "Community-built student-focused Canvas LMS workflows and API access for Codex.",
   "author": {
     "name": "Hunter Schep",
@@ -25,7 +25,7 @@
   "interface": {
     "displayName": "Canvas LMS",
     "shortDescription": "Community-built student-first Canvas tools for Codex.",
-    "longDescription": "Community-built Canvas LMS plugin for Codex focused on student and course workflows: courses, grades, planner items, pages, assignments, quizzes, discussions, files, groups, sections, rubrics, outcomes, announcements, modules, and submissions. This is not an official Instructure product.",
+    "longDescription": "Community-built Canvas LMS plugin for Codex focused on student and course workflows: courses, grades, planner items, pages, assignments, quizzes, submissions, peer reviews, discussions, conversations, search, files, groups, sections, appointments, collaborations, conferences, media, external tools, analytics, rubrics, outcomes, announcements, modules, migrations, exports, and async progress. This is not an official Instructure product.",
     "developerName": "Hunter Schep",
     "category": "Productivity",
     "capabilities": [

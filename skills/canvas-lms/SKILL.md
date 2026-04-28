@@ -1,6 +1,6 @@
 ---
 name: canvas-lms
-description: Use bundled Canvas MCP tools to inspect student-facing Canvas data like courses, grades, pages, calendars, files, discussions, groups, sections, assignments, quizzes, rubrics, outcomes, announcements, modules, and submissions.
+description: Use bundled Canvas MCP tools to inspect student-facing Canvas data like courses, grades, pages, calendars, files, discussions, conversations, search, groups, sections, assignments, quizzes, peer reviews, rubrics, outcomes, appointments, analytics, announcements, modules, and submissions.
 ---
 
 Use this skill whenever the user needs to interact with Canvas LMS data or the Canvas LMS API.
@@ -29,12 +29,24 @@ Use this skill whenever the user needs to interact with Canvas LMS data or the C
 - Use `canvas_list_assignment_groups` and `canvas_get_assignment_group` when the user needs assignment weighting, grading groupings, or assignments grouped by Canvas gradebook category.
 - Use `canvas_list_course_quizzes` and `canvas_get_quiz` for classic quizzes.
 - Use `canvas_get_new_quiz` when the course uses New Quizzes and you know the assignment ID.
+- Use `canvas_list_quiz_submissions`, `canvas_get_current_quiz_submission`, `canvas_get_quiz_submission`, and `canvas_get_quiz_submission_time` for classic quiz submission state and timing.
+- Use `canvas_list_peer_reviews` and `canvas_list_submission_peer_reviews` for assignment peer-review workflows.
 - Use `canvas_list_course_rubrics`, `canvas_get_course_rubric`, and `canvas_list_outcome_results` for rubric and outcome review.
 - Use `canvas_list_student_submissions` for submission-state analysis such as missing work, unsubmitted work, and recent feedback.
 - Use `canvas_list_graded_assignments` for recently graded work, scores, and feedback review.
 - Use `canvas_list_course_modules` for module structure and progress.
 - Use `canvas_list_announcements` for recent course announcements across one or more course contexts.
 - Use `canvas_get_submission` when the user needs detailed grading, comments, rubric, or read-state data for one assignment.
+- Use `canvas_list_conversations`, `canvas_get_conversation`, and `canvas_get_conversations_unread_count` for Inbox workflows.
+- Use `canvas_search_recipients`, `canvas_search_all_courses`, and `canvas_search_course_content` for people, public-course, and course-content search. Use `canvas_find_conversation_recipients` only when the legacy endpoint is specifically useful.
+- Use `canvas_list_bookmarks`, `canvas_get_bookmark`, `canvas_list_favorite_courses`, and `canvas_list_favorite_groups` for user navigation shortcuts.
+- Use `canvas_list_collaborations`, `canvas_list_collaboration_members`, `canvas_list_potential_collaborators`, and `canvas_list_conferences` for collaboration contexts.
+- Use `canvas_list_appointment_groups`, `canvas_get_appointment_group`, `canvas_list_appointment_group_users`, `canvas_list_appointment_group_groups`, and `canvas_get_next_appointment` for scheduler workflows.
+- Use `canvas_list_context_media_objects`, `canvas_list_context_media_attachments`, and `canvas_list_media_tracks` for media inventory and captions.
+- Use `canvas_list_external_tools`, `canvas_get_external_tool`, `canvas_get_external_tool_sessionless_launch`, and `canvas_list_visible_course_nav_tools` for LTI/external-tool discovery.
+- Use `canvas_get_course_analytics_activity`, `canvas_get_course_analytics_assignments`, `canvas_list_course_analytics_student_summaries`, `canvas_get_course_analytics_student_activity`, `canvas_get_course_analytics_student_assignments`, and `canvas_get_course_analytics_student_communication` for course analytics.
+- Use `canvas_get_learning_object_date_details`, `canvas_list_blackout_dates`, and `canvas_get_blackout_date` for date-management inspection.
+- Use `canvas_list_content_exports`, `canvas_get_content_export`, `canvas_list_content_migrations`, `canvas_get_content_migration`, `canvas_list_content_migration_issues`, `canvas_get_content_migration_issue`, and `canvas_get_progress` for export, migration, and async-job status.
 
 ## Canvas rules that matter
 
@@ -55,7 +67,7 @@ Use this skill whenever the user needs to interact with Canvas LMS data or the C
 3. For upcoming work, use `canvas_list_upcoming_planner_items` and `canvas_list_calendar_items`.
 4. For course content, use `canvas_get_front_page`, `canvas_list_course_pages`, and `canvas_list_course_modules`.
 5. For assessment, use `canvas_list_course_assignments`, `canvas_list_course_quizzes`, `canvas_get_quiz`, `canvas_get_new_quiz`, `canvas_list_graded_assignments`, and `canvas_list_student_submissions`.
-6. For communication, use `canvas_list_announcements`.
+6. For communication, use `canvas_list_announcements`, `canvas_list_conversations`, and `canvas_get_conversation`.
 7. When you need an unsupported endpoint, call `canvas_request` with the exact Canvas path.
 8. If a list is paginated, continue from the returned `pageInfo.next` URL or rerun the specialized list tool with pagination enabled.
 

@@ -1,5 +1,5 @@
 export const SERVER_NAME = "canvas-lms";
-export const SERVER_VERSION = "0.3.0";
+export const SERVER_VERSION = "0.4.0";
 export const PROTOCOL_VERSIONS = ["2025-11-25", "2025-06-18", "2025-03-26", "2024-11-05"];
 export const DEFAULT_TIMEOUT_MS = 30_000;
 export const DEFAULT_PER_PAGE = 25;

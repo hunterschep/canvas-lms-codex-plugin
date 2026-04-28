@@ -28,7 +28,7 @@ const requiredFiles = [
 ];
 
 const MAX_SOURCE_LINES = 500;
-const EXPECTED_TOOL_COUNT = 54;
+const EXPECTED_TOOL_COUNT = 103;
 
 function listMjsFiles(directory) {
   const files = [];
@@ -210,7 +210,7 @@ function extractRawJsonMessages(buffer) {
 
 function extractMessages(buffer) {
   const framed = extractFrames(buffer);
-  if (framed.messages.length > 0) {
+  if (framed.messages.length > 0 || /^\s*Content-Length:/i.test(framed.remaining)) {
     return framed;
   }
 

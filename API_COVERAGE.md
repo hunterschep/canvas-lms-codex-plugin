@@ -14,12 +14,18 @@ The docs corpus currently contains 135 Canvas resource pages. The plugin does no
 - Pages and modules: `pages`, `modules`
 - Assignments and submissions: `assignments`, `assignment_groups`, `submissions`
 - Quizzes: `quizzes`, `new_quizzes`
+- Quiz submissions and peer review: `quiz_submissions`, `peer_reviews`
 - Discussions: `discussion_topics`
 - Files and folders: `files`
 - Groups and sections: `groups`, `sections`
 - Navigation: `tabs`
 - Rubrics and outcomes: `rubrics`, `outcome_results`
 - Announcements: `announcements`
+- Communication and search: `conversations`, `search`, `smart_search`
+- User shortcuts: `bookmarks`, `favorites`
+- Collaboration and scheduling: `collaborations`, `conferences`, `appointment_groups`
+- Media and LTI discovery: `media_objects`, `external_tools`
+- Analytics and operations: `analytics`, `learning_object_dates`, `blackout_dates`, `content_exports`, `content_migrations`, `progress`
 
 ## Fallback Policy
 
