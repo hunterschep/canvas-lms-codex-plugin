@@ -8,7 +8,7 @@
 
 Student-first Canvas LMS workflows for Codex, packaged as a local plugin with a bundled MCP server.
 
-This plugin helps Codex read and summarize the parts of Canvas students actually use: courses, grades, planner items, calendar items, pages, assignments, quizzes, modules, submissions, and announcements.
+This plugin helps Codex read and summarize the parts of Canvas students and course teams actually use: courses, grades, planner items, calendar items, users, groups, sections, pages, files, folders, discussions, assignments, quizzes, rubrics, outcomes, modules, submissions, and announcements.
 
 The plugin is presented in Codex as an interactive productivity plugin with bundled Canvas MCP tools.
 
@@ -25,7 +25,9 @@ This is a community-built plugin created by an independent user.
 - show current courses with grade context
 - summarize upcoming work from Planner and Calendar
 - read and summarize course front pages and pages
+- inspect course users, groups, sections, tabs, files, folders, and discussions
 - inspect assignments, quizzes, submissions, and graded work
+- inspect assignment groups, rubrics, and outcome results
 - summarize modules and student progress data
 - pull recent announcements across courses
 - fall back to unsupported student-relevant Canvas REST endpoints under `/api/v1/...` and `/api/quiz/v1/...`
@@ -63,11 +65,11 @@ cd /absolute/path/to/your/repo/plugins/canvas-lms
 ./install.sh --repo-root /absolute/path/to/your/repo --force
 ```
 
-This copies the plugin to `/absolute/path/to/your/repo/plugins/canvas-lms` and updates `/absolute/path/to/your/repo/.agents/plugins/marketplace.json`.
+This places or reuses the plugin at `/absolute/path/to/your/repo/plugins/canvas-lms` and updates `/absolute/path/to/your/repo/.agents/plugins/marketplace.json`.
 
 If you want repo-only behavior, do not also run the personal install.
 
-The committed source `.mcp.json` stays portable in git. The installer rewrites the installed plugin copy to use absolute paths for both the Node binary and `scripts/canvas-mcp-server.mjs`, keeps the repo marketplace name stable as `canvas-local-plugins`, clears stale cached `canvas-lms` bundles, and removes stale `canvas-lms@...` enablement blocks from `~/.codex/config.toml`. It does not register `canvas` as a global `[mcp_servers.canvas]` entry.
+The committed source `.mcp.json` stays portable in git. Workspace installs keep plugin-root-relative MCP paths, while personal installs rewrite the home-local plugin copy to use absolute paths for both the Node binary and `scripts/canvas-mcp-server.mjs`. The installer keeps the repo marketplace name stable as `canvas-local-plugins`, clears stale cached `canvas-lms` bundles, and removes stale `canvas-lms@...` enablement blocks from `~/.codex/config.toml`. It does not register `canvas` as a global `[mcp_servers.canvas]` entry.
 
 If you are upgrading from an older version of this plugin, rerun the installer once. It removes the legacy `canvas-lms managed MCP server` block from `~/.codex/config.toml`.
 
@@ -102,7 +104,7 @@ Optional configuration:
 
 ```bash
 export CANVAS_TIMEOUT_MS="30000"
-export CANVAS_USER_AGENT="canvas-lms-codex-plugin/0.2.2"
+export CANVAS_USER_AGENT="canvas-lms-codex-plugin/0.3.0"
 export CANVAS_ACCEPT_STRING_IDS="1"
 ```
 
@@ -133,18 +135,28 @@ Example prompts:
 
 ## Tool Surface
 
-The plugin exposes 20 Canvas tools through MCP:
+The plugin exposes 54 Canvas tools through MCP:
 
 - Identity:
   `canvas_get_current_user_profile`
 - Courses and grades:
-  `canvas_list_student_courses`, `canvas_get_student_course`, `canvas_get_course_grade_summary`
+  `canvas_list_student_courses`, `canvas_get_student_course`, `canvas_get_course_grade_summary`, `canvas_list_course_users`, `canvas_get_course_user`
+- User workflow:
+  `canvas_get_user_profile`, `canvas_list_user_activity_stream`, `canvas_get_user_activity_summary`, `canvas_list_user_todo_items`, `canvas_get_user_todo_item_count`, `canvas_list_user_missing_submissions`, `canvas_list_user_page_views`
 - Planner and calendar:
   `canvas_list_upcoming_planner_items`, `canvas_list_calendar_items`
 - Pages and modules:
   `canvas_list_course_pages`, `canvas_get_page`, `canvas_get_front_page`, `canvas_list_course_modules`
 - Assignments and quizzes:
-  `canvas_list_course_assignments`, `canvas_get_assignment`, `canvas_list_course_quizzes`, `canvas_get_quiz`, `canvas_get_new_quiz`
+  `canvas_list_course_assignments`, `canvas_list_assignment_groups`, `canvas_get_assignment_group`, `canvas_get_assignment`, `canvas_list_course_quizzes`, `canvas_get_quiz`, `canvas_get_new_quiz`
+- Discussions:
+  `canvas_list_discussion_topics`, `canvas_get_discussion_topic`, `canvas_get_discussion_topic_view`, `canvas_list_discussion_entries`, `canvas_list_discussion_entry_replies`
+- Groups, sections, tabs:
+  `canvas_list_current_user_groups`, `canvas_list_course_groups`, `canvas_get_group`, `canvas_list_group_users`, `canvas_list_course_sections`, `canvas_get_section`, `canvas_list_section_users`, `canvas_list_context_tabs`
+- Files and folders:
+  `canvas_get_files_quota`, `canvas_list_context_files`, `canvas_list_folder_files`, `canvas_get_file`, `canvas_get_file_public_url`, `canvas_list_context_folders`, `canvas_get_folder`
+- Rubrics and outcomes:
+  `canvas_list_course_rubrics`, `canvas_get_course_rubric`, `canvas_list_outcome_results`
 - Submissions and grading:
   `canvas_list_student_submissions`, `canvas_list_graded_assignments`, `canvas_get_submission`
 - Announcements:
@@ -159,11 +171,14 @@ The fallback is intentionally restricted. It only allows same-origin Canvas REST
 This repository is the plugin root:
 
 - `.codex-plugin/plugin.json` contains the Codex plugin manifest
+- `API_COVERAGE.md` records the Canvas docs coverage strategy
 - `.mcp.json` wires the local MCP server
 - `skills/canvas-lms/SKILL.md` contains Canvas-specific operating guidance
 - `scripts/canvas-mcp-server.mjs` is the stdio MCP entrypoint
-- `scripts/canvas-mcp-core.mjs` contains shared validation, HTTP, pagination, and summary helpers
-- `scripts/canvas-mcp-tools.mjs` contains the tool registry and handlers
+- `scripts/canvas-mcp-core.mjs` re-exports the core helper modules
+- `scripts/core/` contains shared validation, HTTP, pagination, and summary helpers
+- `scripts/tools/` contains Canvas API family tool handlers
+- `scripts/canvas-mcp-tools.mjs` assembles the tool registry
 - `scripts/validate-plugin.mjs` validates the package shape and MCP handshake
 - `install.sh` installs the plugin and updates the appropriate marketplace file
 
@@ -189,7 +204,7 @@ If you previously installed a repo copy that used the marketplace name `local-re
 
 This plugin relies on the standard bundled `.mcp.json` flow described in the Codex plugin docs. It does not install a global `canvas` MCP server in `~/.codex/config.toml`.
 
-Current Codex builds may launch bundled MCP commands from the session working directory and without the same shell PATH your interactive session has. The installer therefore rewrites the installed plugin's `.mcp.json` to use absolute paths for both `node` and the MCP entrypoint so the bundled server starts reliably without a global `mcp_servers.canvas` override.
+Personal installs rewrite the home-local `.mcp.json` to absolute `node` and MCP entrypoint paths. Workspace installs intentionally keep `.mcp.json` plugin-root-relative so the repo copy remains portable and reviewable.
 
 The bundled MCP server accepts:
 
@@ -203,12 +218,12 @@ It also mirrors the client's transport style on replies. That matters because cu
 
 Two issues were interacting:
 
-- startup path resolution: local plugin installs could fail if Codex launched the bundled MCP server without the expected working directory or shell `PATH`
+- startup path resolution: personal local plugin installs could fail if Codex launched the bundled MCP server without the expected working directory or shell `PATH`
 - transport mismatch: the original server only understood framed MCP input and always replied with framed output, while Codex's local plugin startup path sent raw JSON `initialize`
 
 ## Why It Works Now
 
-- the installer renders absolute `node` and server paths into the installed plugin copy
+- the installer renders absolute `node` and server paths into the personal home-local plugin copy
 - the server accepts both framed and raw startup messages
 - the server replies in the same transport style the client used
 - the validator exercises all supported startup styles so the regression is caught before release

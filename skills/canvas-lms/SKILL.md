@@ -1,6 +1,6 @@
 ---
 name: canvas-lms
-description: Use bundled Canvas MCP tools to inspect student-facing Canvas data like courses, grades, pages, calendars, assignments, quizzes, announcements, modules, and submissions.
+description: Use bundled Canvas MCP tools to inspect student-facing Canvas data like courses, grades, pages, calendars, files, discussions, groups, sections, assignments, quizzes, rubrics, outcomes, announcements, modules, and submissions.
 ---
 
 Use this skill whenever the user needs to interact with Canvas LMS data or the Canvas LMS API.
@@ -17,12 +17,19 @@ Use this skill whenever the user needs to interact with Canvas LMS data or the C
 - Use `canvas_list_student_courses` for course list plus current grade context.
 - Use `canvas_get_student_course` for one course's student view.
 - Use `canvas_get_course_grade_summary` when the user specifically wants a course-grade summary or grading-period numbers.
+- Use `canvas_list_course_users`, `canvas_get_course_user`, and `canvas_get_user_profile` for roster and user-profile lookups.
+- Use `canvas_list_user_activity_stream`, `canvas_get_user_activity_summary`, `canvas_list_user_todo_items`, `canvas_get_user_todo_item_count`, `canvas_list_user_missing_submissions`, and `canvas_list_user_page_views` for user workflow and activity review.
 - Use `canvas_list_upcoming_planner_items` for upcoming work across courses.
 - Use `canvas_list_calendar_items` for calendar-style due dates and events.
 - Use `canvas_list_course_pages`, `canvas_get_page`, and `canvas_get_front_page` for reading course content pages.
+- Use `canvas_get_files_quota`, `canvas_list_context_files`, `canvas_list_folder_files`, `canvas_get_file`, `canvas_get_file_public_url`, `canvas_list_context_folders`, and `canvas_get_folder` for Canvas files and folders.
+- Use `canvas_list_discussion_topics`, `canvas_get_discussion_topic`, `canvas_get_discussion_topic_view`, `canvas_list_discussion_entries`, and `canvas_list_discussion_entry_replies` for discussion reading workflows.
+- Use `canvas_list_current_user_groups`, `canvas_list_course_groups`, `canvas_get_group`, `canvas_list_group_users`, `canvas_list_course_sections`, `canvas_get_section`, `canvas_list_section_users`, and `canvas_list_context_tabs` for course structure and navigation.
 - Use `canvas_list_course_assignments` for course assignment lists, especially with `bucket` values like `upcoming`, `overdue`, `ungraded`, and `unsubmitted`.
+- Use `canvas_list_assignment_groups` and `canvas_get_assignment_group` when the user needs assignment weighting, grading groupings, or assignments grouped by Canvas gradebook category.
 - Use `canvas_list_course_quizzes` and `canvas_get_quiz` for classic quizzes.
 - Use `canvas_get_new_quiz` when the course uses New Quizzes and you know the assignment ID.
+- Use `canvas_list_course_rubrics`, `canvas_get_course_rubric`, and `canvas_list_outcome_results` for rubric and outcome review.
 - Use `canvas_list_student_submissions` for submission-state analysis such as missing work, unsubmitted work, and recent feedback.
 - Use `canvas_list_graded_assignments` for recently graded work, scores, and feedback review.
 - Use `canvas_list_course_modules` for module structure and progress.

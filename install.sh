@@ -105,6 +105,7 @@ if [[ -d "${HOME}/.codex/plugins/cache" ]]; then
   find "${HOME}/.codex/plugins/cache" -mindepth 2 -maxdepth 2 -type d -name "${PLUGIN_NAME}" -exec rm -rf {} +
 fi
 
+if [[ "${MODE}" == "personal" ]]; then
 python3 - "${TARGET_DIR}" "${NODE_BIN}" <<'PY'
 import json
 import pathlib
@@ -126,6 +127,9 @@ canvas.pop("cwd", None)
 
 mcp_path.write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
 PY
+else
+  echo "Leaving workspace .mcp.json plugin-root-relative for repo portability."
+fi
 
 python3 - "${MARKETPLACE_PATH}" "${MARKETPLACE_SOURCE_PATH}" "${MARKETPLACE_NAME}" "${MARKETPLACE_DISPLAY_NAME}" <<'PY'
 import json

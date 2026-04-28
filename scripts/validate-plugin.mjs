@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
-import { readFileSync, existsSync } from "node:fs";
-import { resolve, dirname } from "node:path";
+import { readFileSync, existsSync, readdirSync } from "node:fs";
+import { resolve, dirname, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawn, spawnSync } from "node:child_process";
 
@@ -12,6 +12,7 @@ const repoRoot = resolve(pluginRoot, "..", "..");
 const requiredFiles = [
   ".codex-plugin/plugin.json",
   ".mcp.json",
+  "API_COVERAGE.md",
   ".gitignore",
   "LICENSE",
   "PRIVACY.md",
@@ -26,12 +27,23 @@ const requiredFiles = [
   "scripts/canvas-mcp-tools.mjs",
 ];
 
-const scriptFiles = [
-  "scripts/canvas-mcp-core.mjs",
-  "scripts/canvas-mcp-tools.mjs",
-  "scripts/canvas-mcp-server.mjs",
-  "scripts/validate-plugin.mjs",
-];
+const MAX_SOURCE_LINES = 500;
+const EXPECTED_TOOL_COUNT = 54;
+
+function listMjsFiles(directory) {
+  const files = [];
+  for (const entry of readdirSync(directory, { withFileTypes: true })) {
+    const fullPath = resolve(directory, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...listMjsFiles(fullPath));
+    } else if (entry.isFile() && entry.name.endsWith(".mjs")) {
+      files.push(relative(pluginRoot, fullPath));
+    }
+  }
+  return files.sort();
+}
+
+const scriptFiles = listMjsFiles(resolve(pluginRoot, "scripts"));
 
 function assert(condition, message) {
   if (!condition) {
@@ -97,9 +109,11 @@ function validateStructure() {
   assert(!installer.includes("[mcp_servers.canvas]"), "install.sh should not write a global [mcp_servers.canvas] block");
   assert(installer.includes('MARKETPLACE_NAME="canvas-local-plugins"'), 'install.sh must keep the repo marketplace name stable as "canvas-local-plugins"');
   assert(installer.includes('SCRIPT_SOURCE="${BASH_SOURCE[0]:-}"'), "install.sh must support being piped to bash without assuming BASH_SOURCE[0] is set");
-  assert(installer.includes('NODE_BIN="$(command -v node || true)"'), "install.sh must resolve an absolute node binary for the installed MCP config");
-  assert(installer.includes('canvas["command"] = str(node_bin)'), "install.sh must rewrite the installed MCP command to an absolute node path");
-  assert(installer.includes('canvas["args"] = [str(server_path)]'), "install.sh must rewrite the installed MCP script path to an absolute path");
+  assert(installer.includes('NODE_BIN="$(command -v node || true)"'), "install.sh must resolve an absolute node binary for the personal installed MCP config");
+  assert(installer.includes('if [[ "${MODE}" == "personal" ]]; then'), "install.sh must only rewrite MCP paths for personal installs");
+  assert(installer.includes('canvas["command"] = str(node_bin)'), "install.sh must rewrite the personal MCP command to an absolute node path");
+  assert(installer.includes('canvas["args"] = [str(server_path)]'), "install.sh must rewrite the personal MCP script path to an absolute path");
+  assert(installer.includes("Leaving workspace .mcp.json plugin-root-relative for repo portability."), "install.sh must keep workspace installs plugin-root-relative");
 
   return manifest;
 }
@@ -107,6 +121,8 @@ function validateStructure() {
 function validateSyntax() {
   for (const relativePath of scriptFiles) {
     const fullPath = resolve(pluginRoot, relativePath);
+    const lineCount = readFileSync(fullPath, "utf8").split("\n").length;
+    assert(lineCount <= MAX_SOURCE_LINES, `${relativePath} has ${lineCount} lines; keep source files at or below ${MAX_SOURCE_LINES} lines`);
     const result = spawnSync(process.execPath, ["--check", fullPath], {
       encoding: "utf8",
       });
@@ -283,7 +299,7 @@ async function validateMcpHandshake(manifest, separator) {
   assert(init?.result?.serverInfo?.version === manifest.version, `MCP initialize response must report server version "${manifest.version}"`);
   assert(typeof init?.result?.instructions === "string" && init.result.instructions.includes("student-focused Canvas tools"), "MCP initialize instructions are missing expected guidance");
   assert(Array.isArray(tools?.result?.tools), "tools/list did not return a tool array");
-  assert(tools.result.tools.length === 20, `Expected 20 tools, found ${tools.result.tools.length}`);
+  assert(tools.result.tools.length === EXPECTED_TOOL_COUNT, `Expected ${EXPECTED_TOOL_COUNT} tools, found ${tools.result.tools.length}`);
 }
 
 async function validateRawJsonHandshake(manifest) {
@@ -367,7 +383,7 @@ async function validateRawJsonHandshake(manifest) {
   assert(init?.result?.serverInfo?.name === "canvas-lms", 'Raw JSON initialize response must report server name "canvas-lms"');
   assert(init?.result?.serverInfo?.version === manifest.version, `Raw JSON initialize response must report server version "${manifest.version}"`);
   assert(Array.isArray(tools?.result?.tools), "Raw JSON tools/list did not return a tool array");
-  assert(tools.result.tools.length === 20, `Expected 20 tools from raw JSON handshake, found ${tools.result.tools.length}`);
+  assert(tools.result.tools.length === EXPECTED_TOOL_COUNT, `Expected ${EXPECTED_TOOL_COUNT} tools from raw JSON handshake, found ${tools.result.tools.length}`);
 }
 
 async function main() {
